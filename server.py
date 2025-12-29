@@ -111,6 +111,16 @@ def website_index():
     """Serve website index"""
     return send_from_directory('website', 'index.html')
 
+@app.route('/styles.css')
+def serve_css():
+    """Serve styles.css from root"""
+    return send_from_directory('website', 'styles.css')
+
+@app.route('/app.js')
+def serve_js():
+    """Serve app.js from root"""
+    return send_from_directory('website', 'app.js')
+
 @app.route('/memory_snapshots/<path:filename>')
 def serve_memory(filename):
     """Serve memory snapshot files"""
