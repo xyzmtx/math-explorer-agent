@@ -7,12 +7,21 @@ import asyncio
 import json
 import queue
 import threading
+import logging
+import traceback
 from datetime import datetime
 from flask import Flask, request, jsonify, Response, send_from_directory
 from flask_cors import CORS
 
 from agent import MathExplorerAgent
 from config import MEMORY_SAVE_PATH
+
+# Configure logging for production debugging
+logging.basicConfig(
+    level=logging.INFO,
+    format='[%(asctime)s] %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__, static_folder='website', static_url_path='/website')
 CORS(app)
@@ -221,14 +230,17 @@ def run_exploration():
     def run_async():
         global is_running
         is_running = True
+        logger.info(f"[run_async] Background thread started for {rounds} rounds")
         try:
             # Run the agent
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
+            logger.info("[run_async] Event loop created, starting agent.run()")
             result = loop.run_until_complete(
                 agent_instance.run(max_rounds=rounds, rounds_per_checkpoint=rounds + 1)
             )
             loop.close()
+            logger.info(f"[run_async] Exploration completed successfully")
             
             event_queue.put({
                 'type': 'exploration_complete',
@@ -239,6 +251,8 @@ def run_exploration():
                 }
             })
         except Exception as e:
+            logger.error(f"[run_async] Exploration error: {e}")
+            logger.error(f"[run_async] Traceback:\n{traceback.format_exc()}")
             event_queue.put({
                 'type': 'exploration_error',
                 'data': {
@@ -248,6 +262,7 @@ def run_exploration():
             })
         finally:
             is_running = False
+            logger.info("[run_async] Background thread finished")
     
     # Run in background thread
     thread = threading.Thread(target=run_async)

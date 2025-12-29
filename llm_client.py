@@ -11,6 +11,7 @@ Features:
 import asyncio
 import json
 import re
+import logging
 from typing import Optional, Dict, Any, List, Tuple
 import httpx
 from config import (
@@ -18,6 +19,8 @@ from config import (
     LLM_TIMEOUT, LLM_MAX_RETRIES, 
     LLM_DEFAULT_MAX_TOKENS, LLM_DEFAULT_TEMPERATURE
 )
+
+logger = logging.getLogger(__name__)
 
 
 class LLMClient:
@@ -164,6 +167,7 @@ class LLMClient:
         async with httpx.AsyncClient(timeout=self.timeout) as client:
             for attempt in range(self.max_retries):
                 try:
+                    logger.info(f"[LLM] Sending request to {self.base_url}/chat/completions (model: {self.model})")
                     response = await client.post(
                         f"{self.base_url}/chat/completions",
                         headers=headers,
@@ -174,20 +178,21 @@ class LLMClient:
                     
                     # Use smart extraction to filter thinking content
                     content = self._extract_final_answer(result)
+                    logger.info(f"[LLM] Response received, length: {len(content)} chars")
                     return content
                     
                 except httpx.HTTPStatusError as e:
-                    print(f"[LLM] HTTP error (attempt {attempt+1}/{self.max_retries}): {e}")
+                    logger.error(f"[LLM] HTTP error (attempt {attempt+1}/{self.max_retries}): {e}")
                     if attempt == self.max_retries - 1:
                         raise Exception(f"API request failed: {e}")
                     await asyncio.sleep(2 ** attempt)
                 except httpx.TimeoutException as e:
-                    print(f"[LLM] Timeout (attempt {attempt+1}/{self.max_retries}): {e}")
+                    logger.error(f"[LLM] Timeout (attempt {attempt+1}/{self.max_retries}): {e}")
                     if attempt == self.max_retries - 1:
                         raise Exception(f"API request timeout: {e}")
                     await asyncio.sleep(2 ** attempt)
                 except Exception as e:
-                    print(f"[LLM] Exception (attempt {attempt+1}/{self.max_retries}): {e}")
+                    logger.error(f"[LLM] Exception (attempt {attempt+1}/{self.max_retries}): {e}")
                     if attempt == self.max_retries - 1:
                         raise Exception(f"Request exception: {e}")
                     await asyncio.sleep(2 ** attempt)
