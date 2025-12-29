@@ -227,20 +227,33 @@ def run_exploration():
     data = request.get_json() or {}
     rounds = data.get('rounds', 1)
     
+    # Mark as running immediately to prevent race conditions
+    is_running = True
+    logger.info(f"[run_exploration] Starting {rounds} rounds, is_running set to True")
+    
     def run_async():
         global is_running
-        is_running = True
-        logger.info(f"[run_async] Background thread started for {rounds} rounds")
+        logger.info(f"[run_async] Thread entry point reached")
+        
+        loop = None
         try:
-            # Run the agent
+            # Create and set new event loop for this thread
+            logger.info("[run_async] Creating new event loop for thread...")
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
-            logger.info("[run_async] Event loop created, starting agent.run()")
+            logger.info("[run_async] Event loop created and set")
+            
+            # Log agent state
+            logger.info(f"[run_async] Agent instance: {agent_instance is not None}")
+            if agent_instance:
+                logger.info(f"[run_async] Memory summary: {agent_instance.get_memory_summary()}")
+            
+            # Run the agent
+            logger.info("[run_async] Calling agent.run()...")
             result = loop.run_until_complete(
                 agent_instance.run(max_rounds=rounds, rounds_per_checkpoint=rounds + 1)
             )
-            loop.close()
-            logger.info(f"[run_async] Exploration completed successfully")
+            logger.info(f"[run_async] agent.run() completed successfully")
             
             event_queue.put({
                 'type': 'exploration_complete',
@@ -250,23 +263,36 @@ def run_exploration():
                     'timestamp': datetime.now().isoformat()
                 }
             })
+            
         except Exception as e:
-            logger.error(f"[run_async] Exploration error: {e}")
-            logger.error(f"[run_async] Traceback:\n{traceback.format_exc()}")
+            logger.error(f"[run_async] Exception caught: {type(e).__name__}: {e}")
+            logger.error(f"[run_async] Full traceback:\n{traceback.format_exc()}")
+            
             event_queue.put({
                 'type': 'exploration_error',
                 'data': {
                     'error': str(e),
+                    'error_type': type(e).__name__,
                     'timestamp': datetime.now().isoformat()
                 }
             })
+            
         finally:
+            if loop:
+                try:
+                    loop.close()
+                    logger.info("[run_async] Event loop closed")
+                except Exception as e:
+                    logger.error(f"[run_async] Error closing loop: {e}")
+            
             is_running = False
-            logger.info("[run_async] Background thread finished")
+            logger.info("[run_async] Thread finished, is_running set to False")
     
-    # Run in background thread
-    thread = threading.Thread(target=run_async)
+    # Run in background thread (daemon=True so it doesn't block shutdown)
+    thread = threading.Thread(target=run_async, daemon=True)
+    logger.info("[run_exploration] Starting background thread...")
     thread.start()
+    logger.info(f"[run_exploration] Thread started: {thread.name}, alive: {thread.is_alive()}")
     
     return jsonify({
         'success': True,

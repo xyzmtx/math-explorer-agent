@@ -453,10 +453,15 @@ class MathExplorerAgent:
         self._should_stop = False
         round_num = 0  # Current round number
         
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info("[Agent.run] Starting exploration loop")
+        
         self._emit("status", "Starting run...")
         
         while self._is_running and round_num < max_rounds:
             round_num += 1
+            logger.info(f"[Agent.run] === Round {round_num} starting ===")
             
             # Check if should stop
             if self._should_stop:
@@ -470,7 +475,9 @@ class MathExplorerAgent:
             
             # Call coordinator to decide this round's actions
             self._emit("status", f"Round {round_num}: Coordinator deciding...")
+            logger.info(f"[Agent.run] Round {round_num}: Calling coordinator.decide_next_actions()...")
             decision = await self.coordinator.decide_next_actions()
+            logger.info(f"[Agent.run] Round {round_num}: Coordinator decision received: {list(decision.keys())}")
             
             # Coordinator no longer makes stop decisions, skip stop check
             # Stop is controlled by human at checkpoints

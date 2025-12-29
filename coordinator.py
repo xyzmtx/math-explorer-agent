@@ -185,6 +185,10 @@ class Coordinator:
             }
         """
         from llm_client import call_llm_safe
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        logger.info("[Coordinator] Building prompts for decision...")
         
         system_prompt = get_coordinator_prompt()
         user_prompt = get_coordinator_user_prompt(
@@ -192,12 +196,15 @@ class Coordinator:
             log_history=self.action_log.to_display_string()
         )
         
+        logger.info(f"[Coordinator] User prompt length: {len(user_prompt)} chars")
+        
         # Use safe mode to call LLM (with more robust defaults)
         default_result = {
             "new_actions": []
         }
         
         try:
+            logger.info("[Coordinator] Calling LLM for decision...")
             result = await call_llm_safe(
                 system_prompt=system_prompt,
                 user_message=user_prompt,
@@ -205,18 +212,22 @@ class Coordinator:
                 temperature=0.3,  # Lower temperature for more stable output
                 max_tokens=4096   # Reduce token limit to avoid truncation
             )
+            logger.info(f"[Coordinator] LLM response received: {list(result.keys())}")
             
             # Validate result format
             if not isinstance(result, dict):
+                logger.warning("[Coordinator] Result is not a dict, returning default")
                 return default_result
             
             # Ensure new_actions field exists
             if "new_actions" not in result:
                 result["new_actions"] = []
             
+            logger.info(f"[Coordinator] Returning {len(result.get('new_actions', []))} new actions")
             return result
             
         except Exception as e:
+            logger.error(f"[Coordinator] Decision error: {e}")
             print(f"[Coordinator] Decision error: {e}")
             return default_result
     
