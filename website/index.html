@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Explorer Agent - Interactive Exploration</title>
+    <meta name="description" content="Interactive mathematical exploration powered by LLM-based reasoning">
+
+    <!-- KaTeX for LaTeX rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <span class="logo-icon">∑</span>
+                <h1>Math Explorer Agent</h1>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-explore" id="btn-start-explore" onclick="openExploreModal()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <polygon points="10 8 16 12 10 16 10 8" />
+                    </svg>
+                    Start Exploration
+                </button>
+                <label class="file-upload-btn">
+                    <input type="file" id="file-input" accept=".json" hidden>
+                    <span class="btn btn-secondary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="17 8 12 3 7 8" />
+                            <line x1="12" y1="3" x2="12" y2="15" />
+                        </svg>
+                        Load JSON
+                    </span>
+                </label>
+            </div>
+        </div>
+    </header>
+
+    <!-- Exploration Status Bar -->
+    <div class="status-bar" id="status-bar">
+        <div class="status-indicator" id="status-indicator">
+            <span class="status-dot"></span>
+            <span class="status-text" id="status-text">Ready</span>
+        </div>
+        <div class="status-actions" id="status-actions">
+            <button class="btn btn-sm btn-run" id="btn-run" onclick="runExploration(1)" disabled>
+                Run 1 Round
+            </button>
+            <button class="btn btn-sm btn-run" id="btn-run-5" onclick="runExploration(5)" disabled>
+                Run 5 Rounds
+            </button>
+            <button class="btn btn-sm btn-stop" id="btn-stop" onclick="stopExploration()" disabled>
+                Stop
+            </button>
+        </div>
+    </div>
+
+    <!-- Activity Log -->
+    <div class="activity-log" id="activity-log">
+        <div class="log-header">
+            <span>Activity Log</span>
+            <button class="log-toggle" onclick="toggleActivityLog()">▼</button>
+        </div>
+        <div class="log-content" id="log-content"></div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Statistics Panel -->
+        <section class="stats-panel" id="stats-panel">
+            <div class="stat-card stat-objects">
+                <div class="stat-icon">📐</div>
+                <div class="stat-info">
+                    <span class="stat-value" id="stat-objects">0</span>
+                    <span class="stat-label">Objects</span>
+                </div>
+            </div>
+            <div class="stat-card stat-concepts">
+                <div class="stat-icon">💡</div>
+                <div class="stat-info">
+                    <span class="stat-value" id="stat-concepts">0</span>
+                    <span class="stat-label">Concepts</span>
+                </div>
+            </div>
+            <div class="stat-card stat-directions">
+                <div class="stat-icon">🧭</div>
+                <div class="stat-info">
+                    <span class="stat-value" id="stat-directions">0</span>
+                    <span class="stat-label">Directions</span>
+                </div>
+            </div>
+            <div class="stat-card stat-conjectures">
+                <div class="stat-icon">❓</div>
+                <div class="stat-info">
+                    <span class="stat-value" id="stat-conjectures">0</span>
+                    <span class="stat-label">Conjectures</span>
+                </div>
+            </div>
+            <div class="stat-card stat-lemmas">
+                <div class="stat-icon">✓</div>
+                <div class="stat-info">
+                    <span class="stat-value" id="stat-lemmas">0</span>
+                    <span class="stat-label">Lemmas</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Navigation Tabs -->
+        <nav class="tabs-nav">
+            <button class="tab-btn active" data-tab="objects">
+                <span class="tab-icon">📐</span> Objects
+            </button>
+            <button class="tab-btn" data-tab="concepts">
+                <span class="tab-icon">💡</span> Concepts
+            </button>
+            <button class="tab-btn" data-tab="directions">
+                <span class="tab-icon">🧭</span> Directions
+            </button>
+            <button class="tab-btn" data-tab="conjectures">
+                <span class="tab-icon">❓</span> Conjectures
+            </button>
+            <button class="tab-btn" data-tab="lemmas">
+                <span class="tab-icon">✓</span> Lemmas
+            </button>
+        </nav>
+
+        <!-- Content Sections -->
+        <div class="content-sections">
+            <!-- Objects Section -->
+            <section class="section active" id="objects-section">
+                <div class="section-header">
+                    <h2>Mathematical Objects</h2>
+                    <p class="section-description">Instances in the mathematical world - the "nouns" being studied</p>
+                </div>
+                <div class="cards-grid" id="objects-grid"></div>
+            </section>
+
+            <!-- Concepts Section -->
+            <section class="section" id="concepts-section">
+                <div class="section-header">
+                    <h2>Mathematical Concepts</h2>
+                    <p class="section-description">Types and templates describing properties, categories, and structures
+                    </p>
+                </div>
+                <div class="cards-grid" id="concepts-grid"></div>
+            </section>
+
+            <!-- Directions Section -->
+            <section class="section" id="directions-section">
+                <div class="section-header">
+                    <h2>Exploration Directions</h2>
+                    <p class="section-description">Paths for investigating conjectures and relationships</p>
+                </div>
+                <div class="cards-grid" id="directions-grid"></div>
+            </section>
+
+            <!-- Conjectures Section -->
+            <section class="section" id="conjectures-section">
+                <div class="section-header">
+                    <h2>Mathematical Conjectures</h2>
+                    <p class="section-description">Rigorous propositions awaiting proof</p>
+                </div>
+                <div class="cards-grid" id="conjectures-grid"></div>
+            </section>
+
+            <!-- Lemmas Section -->
+            <section class="section" id="lemmas-section">
+                <div class="section-header">
+                    <h2>Proven Lemmas</h2>
+                    <p class="section-description">Established mathematical conclusions with complete proofs</p>
+                </div>
+                <div class="cards-grid" id="lemmas-grid"></div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>Math Explorer Agent © 2024 | Powered by LLM-based Mathematical Exploration</p>
+    </footer>
+
+    <!-- Exploration Modal -->
+    <div class="modal-overlay" id="explore-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Start Mathematical Exploration</h2>
+                <button class="modal-close" onclick="closeExploreModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-description">
+                    Enter a mathematical problem, conjecture, or topic you want to explore.
+                    The AI agent will parse the input and begin systematic exploration.
+                </p>
+                <textarea id="math-input" class="math-textarea"
+                    placeholder="Example: Prove that for any prime p, the polynomial x^2 + 1 has a root modulo p if and only if p ≡ 1 (mod 4).
+
+Or: Explore the properties of Fibonacci numbers and their relationship to the golden ratio.
+
+Or: Given a monic irreducible polynomial f(x) over ℤ, study the density of primes p for which f(x) ≡ 0 (mod p) has a solution." rows="10"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeExploreModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="startExploration()" id="btn-submit-explore">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="5 3 19 12 5 21 5 3" />
+                    </svg>
+                    Start Exploration
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-spinner"></div>
+        <p id="loading-text">Initializing exploration...</p>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

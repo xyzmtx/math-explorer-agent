@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+logs/
+*.log
+
+# Local config (don't commit API keys!)
+.env
+config_local.py
+
+# Memory snapshots (optional - comment out if you want to include sample data)
+# memory_snapshots/
+
+# OS
+.DS_Store
+Thumbs.db
