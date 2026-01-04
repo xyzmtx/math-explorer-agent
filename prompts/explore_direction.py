@@ -76,9 +76,17 @@ A conclusion is a proven mathematical proposition, or conditions assumed to hold
 
 ### Case 1: Completely Solved
 
-If you completely solved this exploration direction, please output:
-- Complete solution process and conclusion
-- If you obtained a rigorous mathematical proposition, you can output it as a **mathematical conjecture** (with proof attempt attached)
+If you completely solved this exploration direction:
+
+1. **Output the rigorous mathematical proposition** as a **mathematical conjecture**
+   - The statement must be in "prove that..." form
+   - Include confidence level (typically "High" since you have a complete proof)
+   
+2. **Attach your complete proof** as a proof attempt
+   - Provide the full, rigorous proof process
+   - This proof will be verified by other workers before becoming a lemma
+
+**Important**: Even if you have a complete proof, do NOT output it as a lemma directly. In this project, all proofs must go through the verification pipeline before being stored as conclusions in Memory.
 
 ### Case 2: Unable to Completely Solve
 
