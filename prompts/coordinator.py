@@ -73,7 +73,6 @@ A conclusion is a proven mathematical proposition, or conditions assumed to hold
 
 | Action Type | Parameters | Description |
 |---------|------|------|
-| retrieval | None | Retrieve relevant mathematical theories |
 | propose_objects | None | Propose new mathematical objects and concepts |
 | propose_directions | None | Propose new exploration directions |
 | explore_direction | direction_id | Deeply explore a certain direction |
@@ -81,19 +80,17 @@ A conclusion is a proven mathematical proposition, or conditions assumed to hold
 
 ### Detailed Description of Each Action Type
 
-1. retrieval: Based on all information in memory, retrieve known mathematical theories, propositions, or conjectures related to them
-2. propose_objects: Based on all information in memory, try to propose new meaningful mathematical objects or concepts.
-3. propose_directions: Based on all information in memory, try to propose new mathematical exploration directions.
-4. explore_direction: Deeply explore a specified mathematical exploration direction.
-5. solve_conjecture: Attempt to prove or disprove a specified mathematical conjecture.
+1. propose_objects: Based on all information in memory, try to propose new meaningful mathematical objects or concepts.
+2. propose_directions: Based on all information in memory, try to propose new mathematical exploration directions.
+3. explore_direction: Deeply explore a specified mathematical exploration direction.
+4. solve_conjecture: Attempt to prove or disprove a specified mathematical conjecture.
 
 ### Priority Principles
 
 1. **High Priority**: solve_conjecture for high confidence conjectures
 2. **High Priority**: explore_direction for new exploration directions
 3. **Medium Priority**: Periodically schedule propose_objects and propose_directions to discover new content
-4. **Medium Priority**: Periodically schedule retrieval to retrieve relevant theories
-5. **Medium Priority**: Re-exploration of already processed directions
+4. **Medium Priority**: Re-exploration of already processed directions
 
 ### Parallel Control
 
@@ -109,11 +106,6 @@ Output JSON:
 ```json
 {
   "new_actions": [
-    {
-      "action_type": "retrieval",
-      "params": {},
-      "priority": "medium"
-    },
     {
       "action_type": "propose_objects",
       "params": {},
@@ -163,6 +155,5 @@ def get_coordinator_user_prompt(memory_display: str, log_history: str) -> str:
 □ Has every direction in Memory been processed by explore_direction?
 □ Has every conjecture in Memory been processed by solve_conjecture?
 □ Do we need to schedule propose_objects/propose_directions to discover new content?
-□ Do we need to schedule retrieval to retrieve relevant theories?
 
 Please output JSON directly.'''
